@@ -1,15 +1,69 @@
 # Task
-
-## Task (비동기 컨텍스트)
-- 비동기 작업을 실행하는 컨테이너(비동기 컨텍스트)   
+## Task
+- 비동기 컨텍스트: 비동기적으로 작업을 실행하는 컨텍스트
 - Task 블록 내에서 async 함수(비동기 함수)를 await하여 완료될 때까지 대기한다.   
 - Task는 반환 값을 가질 수 있으며 await 키워드를 통해 접근할 수 있다.
 
+### async/await
+- 비동기 코드를 쉽게 작성하기 위해 도입된 기능
+- 콜백 지옥(callback hell)을 피하고, 더 읽기 쉽고 유지관리하기 쉬운 코드를 작성할 수 있다.
+- async
+  - 비동기 함수(비동기 컨텍스트 내에서만 실행될 수 있다.) 
+  - 함수가 비동기적으로 실행됨을 나타내고, 일시 중단될 수 있으며, 호출자가 기다릴 수 있다.   
+  - Task 없이 다른 비동기 함수를 호출할 수 있다.
+
+- await 
+  - 비동기 함수 호출이 완료될 때까지 기다린다.
+
+```swift
+// 예) 네트워크에서 데이터를 가져오는 비동기 함수 호출
+
+// 비동기 함수
+func fetchData(from url: String) async throws -> Data? {
+    guard let url = URL(string: url) else {
+        return nil
+    }
+
+    let (data, response) = try await URLSession.shared.data(from: url)
+
+    guard ...
+
+    return data
+}
+
+// 비동기 함수를 호출하는 다른 비동기 함수
+func processData() async {
+    let urlString = "...";
+
+    do {
+        let data = try await fetchData(from: urlString)
+        ...
+    } catch{
+        // ...
+    }
+}
+
+// 비동기 함수 호출
+Task {
+    await processData()
+}
+```
+
+### 비동기
+
+- 비동기는 실행 순서의 문제이다.
+- 작업들이 순차적으로 실행되는 것이 아니고, 동시에 여러 작업을 처리할 수 있다.
+- 이로 인해 예측 불가능한 결과(비결정적인 결과)가 발생할 수 있다.
+
 ### 컨텍스트
-- 단일 Task 블록은 독립된 실행 컨텍스트에서 실행되며, 이 실행 컨텍스트는 우선순위, 취소 상태 및 로컬 변수와 같은 몇 가지 요소를 포함한다.
-- Task는 계층 구조를 가질 수 있으며, 상위(부모) Task는 하위(자식) Task를 포함할 수 있다. 이때 하위 Task는 실행 컨텍스트를 상속받아 사용한다. 
-- 이때 컨텍스트에는 우선순위, 취소 상태 등을 상속받는다.
-- Task.detached {} 로 부모 Task의 컨텍스트와 분리되어 독립적으로 실행될 수 있다.
+- 단일 Task 블록은 독립된 실행 컨텍스트에서 실행되며, 이 실행 컨텍스트는 우선순위, 취소 상태 및 로컬 변수와 같은 상태를 포함한다.
+- Task는 계층 구조를 가질 수 있으며, 상위(부모) Task는 하위(자식) Task를 포함할 수 있다. 이때 하위 Task는 상위 Task의 컨텍스트를 상속받아 사용한다. 
+- 이때 우선순위, 취소 상태 등을 상속받는다.
+- Task.detached {} 로 부모 Task의 컨텍스트와 분리되어 독립적으로 실행될 수 있다.   
+  
+
+참고: 일반적인 컨텍스트란?
+- 작업 단위, 상태 정보, ..
 
 ### Task Group with for-await
 - 여러 개의 비동기 작업을 그룹으로 묶어 관리할 수 있다.
@@ -31,13 +85,13 @@ await withTaskGroup(of: String.self) { group in
 }
 ```
 
-### about Actor
-- 액터 내에서 실행되는 Task(+ 액터의 isolated context를 상속받는 Task): 
+### Actor
+- 액터 내에서 실행되는 Task(액터의 isolated context를 상속받는 Task): 
   - 액터의 상태에 안전하게 '접근'할 수 있으며, 액터의 상태를 '수정'할 수 있다.
   - 액터의 인스턴스 메서드에 안전하게 접근할 수 있다. 
-- 액터 외부에서 실행되는 Task(+ 액터의 isolated context를 상속받지 않는 Task): 
-  - 액터의 isolated context를 상속받지 않는다. (상속받을 액터의 컨텍스트가 없음)
-  - 액터의 상태에 직접 접근할 수 없으며, 액터의 상태를 안전하게 수정할 수 없다.
+- 액터 외부에서 실행되는 Task(액터의 isolated context를 상속받지 않는 Task): 
+  - 액터의 isolated context를 상속받지 않는다.
+  - 액터의 상태에 직접 '접근'할 수 없으며, 액터의 상태를 안전하게 '수정'할 수 없다.
   - 액터의 메서드를 호출하려면 해당 호출이 비동기(async)적으로 수행되며, 호출이 완료될 때까지 기다려야 한다.
 
 ## 예외 처리
